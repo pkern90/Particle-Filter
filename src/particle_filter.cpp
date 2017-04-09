@@ -50,11 +50,23 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted, std::vector<LandmarkObs>& observations) {
-	// TODO: Find the predicted measurement that is closest to each observed measurement and assign the 
-	//   observed measurement to this particular landmark.
-	// NOTE: this method will NOT be called by the grading code. But you will probably find it useful to 
-	//   implement this method and use it as a helper during the updateWeights phase.
 
+    for(int i = 0; i < observations.size(); i++){
+        LandmarkObs cur_observation = observations[i];
+        LandmarkObs cur_closest_prediction = predicted[0];
+        double cur_closest_dist = dist(cur_observation.x, cur_observation.y, cur_closest_prediction.x, cur_closest_prediction.y);
+
+        for(int j = 1; j < predicted.size(); j++){
+            LandmarkObs cur_prediction = predicted[j];
+            double cur_dist = dist(cur_observation.x, cur_observation.y, cur_prediction.x, cur_prediction.y);
+            if(cur_dist < cur_closest_dist){
+                cur_closest_dist = cur_dist;
+                cur_closest_prediction = cur_prediction;
+            }
+        }
+
+        observations[i] = cur_closest_prediction;
+    }
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
@@ -70,6 +82,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	//   3.33. Note that you'll need to switch the minus sign in that equation to a plus to account 
 	//   for the fact that the map's y-axis actually points downwards.)
 	//   http://planning.cs.uiuc.edu/node99.html
+
+    dataAssociation(observations, observations);
 }
 
 void ParticleFilter::resample() {
