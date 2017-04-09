@@ -23,6 +23,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 		p.weight = 1.d;
 
 		particles.push_back(p);
+        weights.push_back(p.weight);
 	}
 
 	is_initialized = true;
@@ -32,7 +33,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
 
     for(int i = 0; i < num_particles; i++){
 
-        auto* p = &particles[i];
+        Particle* p = &particles[i];
         double x_new = p->x + velocity/yaw_rate * (sin(p->theta + yaw_rate * delta_t) - sin(p->theta));
         double y_new = p->y + velocity/yaw_rate * (cos(p->theta) - cos(p->theta + yaw_rate * delta_t));
         double theta_new = p->theta + yaw_rate * delta_t;
@@ -72,10 +73,15 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 }
 
 void ParticleFilter::resample() {
-	// TODO: Resample particles with replacement with probability proportional to their weight. 
-	// NOTE: You may find std::discrete_distribution helpful here.
-	//   http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
+    std::default_random_engine gen;
+    std::discrete_distribution<> dist_particles(weights.begin(), weights.end());
+    std::vector<Particle> resampled_particles;
 
+    for(int i = 0; i < num_particles; i++){
+        resampled_particles.push_back(particles[dist_particles(gen)]);
+    }
+
+    particles = resampled_particles;
 }
 
 void ParticleFilter::write(std::string filename) {
